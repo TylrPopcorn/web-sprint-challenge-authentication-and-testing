@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs")
 const authMiddleware = require("./auth-middleware")
 const authModel = require("./auth-model")
 
-router.post('/register', authMiddleware.checkNameExists, async (req, res, next) => {
+router.post('/register', authMiddleware.checkNameAvailable, async (req, res, next) => {
   //  res.end('implement register, please!');
   /*
     IMPLEMENT
@@ -35,7 +35,7 @@ router.post('/register', authMiddleware.checkNameExists, async (req, res, next) 
   if (!req.body || !req.body.username || !req.body.password || req.body.username.trim().length <= 0 || req.body.password.trim().length <= 0 || typeof (req.body.username) != "string") {
     next({
       status: 400,
-      message: "USERNAME and PASSWORD required."
+      message: "username and password required"
     })
   }
 
@@ -59,8 +59,8 @@ router.post('/register', authMiddleware.checkNameExists, async (req, res, next) 
 
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post('/login', authMiddleware.checkNameExists, async (req, res, next) => {
+  //res.end('implement login, please!');
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -84,6 +84,33 @@ router.post('/login', (req, res) => {
     4- On FAILED login due to `username` not existing in the db, or `password` being incorrect,
       the response body should include a string exactly as follows: "invalid credentials".
   */
+
+  try {
+    let username = req.body.username.trim()
+    let password = req.body.password;
+
+    let result = await authModel.findBy({
+      username: username
+    });
+
+    if (result) {
+      //  console.log("yes", result)
+      let result2 = await authModel.findBy({ type: "name", username: result[0].username })
+      // console.log(result2, "Ygsf")
+
+      res.status(201).json({
+        message: `welcome, ${result2.username}`,
+        token: result2.password,
+      })
+    } else {
+      console.log("no", result)
+      throw Error(`result = '${result}`)
+    }
+
+  } catch (err) {
+    next(err)
+  }
+
 });
 
 module.exports = router;

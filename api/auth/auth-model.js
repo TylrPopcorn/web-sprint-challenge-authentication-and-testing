@@ -6,6 +6,8 @@ module.exports = {
         if (filter.type) {
             if (filter.type == "id") {
                 return db('users').where("id", filter.id).first()
+            } else if (filter.type == "name") {
+                return db("users").where("username", filter.username).first()
             }
         } else {
             return db("users").select('username').where(filter)

@@ -4,6 +4,8 @@ const bcrypt = require("bcryptjs")
 const authMiddleware = require("./auth-middleware")
 const authModel = require("./auth-model")
 
+const jwt = require("jsonwebtoken")
+
 router.post('/register', authMiddleware.checkNameAvailable, async (req, res, next) => {
   //  res.end('implement register, please!');
   /*
@@ -32,16 +34,9 @@ router.post('/register', authMiddleware.checkNameAvailable, async (req, res, nex
       the response body should include a string exactly as follows: "username taken".
   */
 
-  if (!req.body || !req.body.username || !req.body.password || req.body.username.trim().length <= 0 || req.body.password.trim().length <= 0 || typeof (req.body.username) != "string") {
-    next({
-      status: 400,
-      message: "username and password required"
-    })
-  }
-
   try {
     let username = req.body.username.trim()
-    let password = req.body.password;
+    let password = req.body.password.trim();
 
     let hash = bcrypt.hashSync(password, 8)
     let result = await authModel.add({ username, password: hash });
@@ -87,24 +82,35 @@ router.post('/login', authMiddleware.checkNameExists, async (req, res, next) => 
 
   try {
     let username = req.body.username.trim()
-    let password = req.body.password;
+    let password = req.body.password.trim();
 
     let result = await authModel.findBy({
       username: username
     });
 
     if (result) {
-      //  console.log("yes", result)
+      // console.log("Yes", result)
       let result2 = await authModel.findBy({ type: "name", username: result[0].username })
-      // console.log(result2, "Ygsf")
+      //console.log(result2, "Ygsf")
+      console.log(password, result2.password, "TESTS")
 
-      res.status(201).json({
-        message: `welcome, ${result2.username}`,
-        token: result2.password,
-      })
+
+      if (bcrypt.compareSync(password, result2.password)) {
+        const token = buildToken(result2)
+
+        res.status(201).json({
+          message: `welcome, ${result2.username}`,
+          token: token,
+        })
+      } else {
+        next({
+          status: 401,
+          message: "Invalid credentials"
+        })
+      }
     } else {
-      console.log("no", result)
-      throw Error(`result = '${result}`)
+      // console.log("no", result)
+      throw Error(`invalid credentials`)
     }
 
   } catch (err) {
@@ -112,5 +118,17 @@ router.post('/login', authMiddleware.checkNameExists, async (req, res, next) => 
   }
 
 });
+
+function buildToken(user) {
+  const payload = {
+    subject: user.id,
+    username: user.username,
+  }
+  const options = {
+    expiresIn: "1d",
+  }
+
+  return jwt.sign(payload, "shhh", options)
+}
 
 module.exports = router;

@@ -11,6 +11,7 @@
   npm i -D cross-env
   npm i supertest
   npm i express-session
+  npm i jsonwebtoke
 
   Helpful Reminders:
   ------

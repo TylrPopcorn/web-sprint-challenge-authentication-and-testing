@@ -8,6 +8,7 @@
   npm i knex
   npx eslint --init
   npm i bcryptjs
+  npm i dotenv
   npm i -D cross-env
   npm i supertest
   npm i express-session

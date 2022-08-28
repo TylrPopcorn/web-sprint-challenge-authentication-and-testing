@@ -4,6 +4,9 @@ const bcrypt = require("bcryptjs")
 const authMiddleware = require("./auth-middleware")
 const authModel = require("./auth-model")
 
+require("dotenv").config()
+const { JWT_SECRET } = require("../../secrets/index")
+
 const jwt = require("jsonwebtoken")
 
 router.post('/register', authMiddleware.checkNameAvailable, async (req, res, next) => {
@@ -54,6 +57,8 @@ router.post('/register', authMiddleware.checkNameAvailable, async (req, res, nex
 
 });
 
+
+
 router.post('/login', authMiddleware.checkNameExists, async (req, res, next) => {
   //res.end('implement login, please!');
   /*
@@ -91,14 +96,14 @@ router.post('/login', authMiddleware.checkNameExists, async (req, res, next) => 
     if (result) {
       // console.log("Yes", result)
       let result2 = await authModel.findBy({ type: "name", username: result[0].username })
-      //console.log(result2, "Ygsf")
-      console.log(password, result2.password, "TESTS")
+      // console.log(result2, "Ygsf")
+      //console.log(password, result2.password, "TESTS")
 
 
       if (bcrypt.compareSync(password, result2.password)) {
         const token = buildToken(result2)
 
-        res.status(201).json({
+        res.status(200).json({
           message: `welcome, ${result2.username}`,
           token: token,
         })
@@ -121,14 +126,14 @@ router.post('/login', authMiddleware.checkNameExists, async (req, res, next) => 
 
 function buildToken(user) {
   const payload = {
-    subject: user.id,
+    id: user.id,
     username: user.username,
   }
   const options = {
-    expiresIn: "1d",
+    expiresIn: "5h",
   }
 
-  return jwt.sign(payload, "shhh", options)
+  return jwt.sign(payload, JWT_SECRET, options)
 }
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const authmodel = require("./auth-model")
+require("dotenv").config()
 
 module.exports = {
 
@@ -16,6 +17,7 @@ module.exports = {
             })
             if (!user) {
                 //All good. Username is NOT taken.
+
                 req.user = user
                 next()
 
